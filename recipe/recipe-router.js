@@ -4,21 +4,35 @@ const knex = require('knex');
 const dbConfig = require('../data/db-config.js');
 const knexConfig = require('../knexfile.js');
 
-const db = require('../data/db-config');
+// const db = require('../data/db-config');
+const Recipes = require('./recipe-model');
 
 const router = express.Router();
 
 router.get('/', (req, res) => {
-    const sql = db('*').from('recipe').toString();
-    console.log(sql)
-    db('recipe')
-        .then(recipes => {
-            res.json(recipes);
+    Recipes.find()
+    .then(recipe => {
+            res.json(recipe);
         })
         .catch(err => {
             res.status(500).json({ message: 'error getting recipe', error: err })
         })
 });
+
+router.get(':id/recipes', (req, res) =>{
+    const { id } = req.params;
+
+    db('recipes as r')
+    .join('ingredients as ing','ing.id', 'r.ing_id')
+    .select('r.id')
+    .where({recipe_id: id})
+        .then(recipes =>{
+         res.json(recipes)
+     })
+     .catch(err =>{
+         res.status(500).json({message: "error getting ingredients for recipe"})
+     })
+})
 
 router.get('/:id', async (req, res) => {
     const { id } = req.params;// Because we want to selct a specifi ID
