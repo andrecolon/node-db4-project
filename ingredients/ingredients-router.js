@@ -3,44 +3,41 @@ const express = require('express');
 const knex = require('knex');
 const dbConfig = require('../data/db-config.js');
 const knexConfig = require('../knexfile.js');
+const { findRecipes } = require('../recipe/recipe-model.js');
 
 // const db = require('../data/db-config');
-const Recipes = require('./recipe-model');
+const Ingredients = require('./ingredients-model');
 
 const router = express.Router();
 
 router.get('/', (req, res) => {
-    Recipes.find()
-    .then(recipe => {
-            res.json(recipe);
+    Ingredients.find()
+        .then(ing => {
+            res.json(ing);
         })
         .catch(err => {
-            res.status(500).json({ message: 'error getting recipe', error: err })
+            res.status(500).json({ message: 'error getting ingrdients', error: err })
         })
 });
 
-router.get(':id/ingredients', (req, res) =>{
+router.get(':id/recipes', (req, res) => {
     const { id } = req.params;
-
-    db('recipes as r')
-    .join('ingredients as ing','ing.id', 'r.ing_id')
-    .select('r.id')
-    .where({recipe_id: id})
-        .then(recipes =>{
-         res.json(recipes)
-     })
-     .catch(err =>{
-         res.status(500).json({message: "error getting ingredients for recipe"})
-     })
+    Ingredients.findRecipes(id)
+        .then(Ingredients => {
+            res.json(Ingredients)
+        })
+        .catch(err => {
+            res.status(500).json({ message: "error getting ingredients for ingredients" })
+        })
 })
 
 router.get('/:id', async (req, res) => {
     const { id } = req.params;// Because we want to selct a specifi ID
     try {
-        //const response = await db('recipe').where('id', id).select('*');
-        const [recipes] = await db('recipe').where({ id });
-        if (recipes) {
-            res.json(recipes)
+        //const response = await db('ingredients').where('id', id).select('*');
+        const [Ingredients] = await db('ingredients').where({ id });
+        if (Ingredients) {
+            res.json(Ingredients)
         } else {
             res.status(404).json({ message: 'bad id' });
         }
@@ -55,9 +52,9 @@ router.post('/', async (req, res) => {
 
     const newPost = req.body;
     try {
-        //const sql = db('recipe').insert(newPost).toString();
+        //const sql = db('ingredients').insert(newPost).toString();
         // console.log(sql)
-        const post = await db('recipe').insert(newPost);
+        const post = await db('ingredients').insert(newPost);
         res.status(201).json(post)
     } catch (err) {
         console.log(err)
@@ -71,7 +68,7 @@ router.put('/:id', async (req, res) => {
     const changes = req.body;
 
     try {
-        const count = await db('recipe').update(changes).where({ id });
+        const count = await db('ingredients').update(changes).where({ id });
 
         if (count) {
             res.json({ updated: count })
@@ -89,7 +86,7 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
-        const count = await db('recipe').where({ id }).del();
+        const count = await db('ingredients').where({ id }).del();
 
         if (count) {
             res.json({ deleted: count });
